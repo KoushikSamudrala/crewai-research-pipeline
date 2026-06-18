@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CrewAI Multi-Agent Research Pipeline
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 1024
+
+Resources:
+  ResearchApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          GOOGLE_API_KEY: !Ref GoogleApiKey
+          TAVILY_API_KEY: !Ref TavilyApiKey
+          LANGCHAIN_API_KEY: !Ref LangchainApiKey
+          LANGCHAIN_TRACING_V2: true
+          LANGCHAIN_ENDPOINT: https://api.smith.langchain.com
+          LANGCHAIN_PROJECT: crewai-research-pipeline
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+Parameters:
+  GoogleApiKey:
+    Type: String
+    NoEcho: true
+  TavilyApiKey:
+    Type: String
+    NoEcho: true
+  LangchainApiKey:
+    Type: String
+    NoEcho: true
+
+Outputs:
+  ApiUrl:
+    Description: API endpoint
+    Value: !Sub "https://${ResearchApiFunction}.execute-api.${AWS::Region}.amazonaws.com"
